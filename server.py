@@ -1,3 +1,10 @@
+from flask import Flask, request
+import json, os
+
+app = Flask(__name__)
+
+# Use your full HTML as a string
+HTML_PAGE = """ 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -332,3 +339,32 @@
   </footer>
 </body>
 </html>
+""" 
+
+def save_to_db(entry):
+    """Append a new record to database.json"""
+    if os.path.exists("database.json"):
+        try:
+            with open("database.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            data = []
+    else:
+        data = []
+    data.append(entry)
+    with open("database.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
+@app.route('/')
+def home():
+    return HTML_PAGE
+
+@app.route('/register', methods=['POST'])
+def register():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    save_to_db({"email": email, "password": password})
+    return "<h2>Registration submitted and saved!</h2>"
+
+if __name__ == '__main__':
+    app.run(debug=True)
